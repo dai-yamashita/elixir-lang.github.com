@@ -8,7 +8,11 @@ guide: 1
 
   <div class="toc"></div>
 
+この章では、スーパーバイザーの連なり(supervision tree)のことや、設定、テストなどを含んだ完璧なElixirのアプリケーションを作る方法について学びます。
+
 In this guide, we will learn how to build a complete Elixir application, with its own supervision tree, configuration, tests and more.
+
+アプリケーションは分散型キーバリューストアとして動作します。私たちはこれからキーと値のペアのバケット(単位)と複数のノードにまたがる分散型のバケットを管理します。また、次のようなリクエストを同時に送るノードを複数接続するためのシンプルなクライアントも作成していきます。
 
 The application works as a distributed key-value store. We are going to organize key-value pairs into buckets and distribute those buckets across multiple nodes. We will also build a simple client that allows us to connect to any of those nodes and send requests such as:
 
@@ -30,27 +34,47 @@ DELETE shopping eggs
 OK
 ```
 
+このようなキーバリューアプリケーションを作るのに必要な3つのツールを紹介します。
+
 In order to build our key-value application, we are going to use three main tools:
+
+* OTPはErlangのライブラリ集です。Erlangの開発者はOTPを使うことで強力で、障害の起きにくいアプリケーションを開発できます。この章ではOTPをElixirで扱ったり、スーパーバイザーの連なりやイベントマネージャーなどを扱います。
 
 * OTP is a set of libraries that ships with Erlang. Erlang developers use OTP to build robust, fault-tolerant applications. In this chapter we will explore how many aspects from OTP integrate with Elixir, including supervision trees, event managers and more;
 
+* MixはElixirにおける作成、コンパイル、アプリケーションのテスト、依存関係の管理を扱うためのビルドツールです。
+
 * Mix is a build tool that ships with Elixir that provides tasks for creating, compiling, testing your application, managing its dependencies and much more;
+
+* ExUnitはElixirをもとに書かれたテスト駆動フレームワークです。
 
 * ExUnit is a test-unit based framework that ships with Elixir;
 
+この章では、まずMixを使って最初のプロジェクトを作り進めながら、MixやExUnitとOTPとの違いについて扱います。
+
 In this chapter, we will create our first project using Mix and explore different features in OTP, Mix and ExUnit as we go.
+
+> 注意: この章はElixirのバージョンv0.15.0以降が必要です。Elixirのバージョンを調べるコマンドは`elixir -v`で、もし詳しい説明が必要であれば、[getting startedの最初の章](/getting_started/1.html)を読んでください。
+>
+> もし何か質問やこのガイドへの改善案があれば，それぞれ[メーリングリスト](https://groups.google.com/d/forum/elixir-lang-talk)か[イシュートラッカー](http://github.com/elixir-lang/elixir-lang.github.com/issues)へお知らせください．あなたのインプットはとても大切で，私たちがこのガイドを読みやすいように担保し，最新の状態を保つのに役立ちます．
 
 > Note: this guide requires Elixir v0.15.0 or later. You can check your Elixir version with `elixir -v` and install a more recent version if required by following the steps described in [the first chapter of the Getting Started guide](/getting_started/1.html).
 >
 > If you have any questions or improvements to the guide, please let us know in [our mailing list](https://groups.google.com/d/forum/elixir-lang-talk) or [issues tracker](http://github.com/elixir-lang/elixir-lang.github.com/issues) respectively. Your input is really important to help us guarantee the guides are accessible and up to date!
 
-## 1.1 Our first project
+## 1.1 最初のプロジェクト - Our first project
+
+Elixirをインストールしたら、まず`elixir`に`elixirc`と`iex`の実行ファイルに加えて、Elixirの実行ファイルである`mix`を使えるようになります。
 
 When you install Elixir, besides getting the `elixir`, `elixirc` and `iex` executables, you also get an executable Elixir script named `mix`.
+
+まずは最初のプロジェクトを`mix new`をコマンドラインから実行してみましょう。プロジェクト名を引数に渡して(今回は`kv`)、そのままであればメインのモジュールは通常`Kv`というように処理されてしまうので、今回は大文字で`KV`であることをmixに伝えましょう。
 
 Let's create our first project by invoking `mix new` from the command line. We'll pass the project name as argument (`kv`, in this case), and tell mix that our main module should be the all-uppercase `KV`, instead of the default, which would have been `Kv`:
 
     $ mix new kv --module KV
+
+Mixは`kv`といういくつかのファイルを含んだディレクトリを作成します。
 
 Mix will create a directory named `kv` with a few files in it:
 
@@ -65,7 +89,19 @@ Mix will create a directory named `kv` with a few files in it:
     * creating test/test_helper.exs
     * creating test/kv_test.exs
 
+生成されたファイルを見てみましょう。
+
 Let's take a brief look at those generated files.
+
+> 注意: MixはElixirの実行形式のひとつです。`mix`を実行するのにElixirの実行形式をPATHに含めなければなりません。あるいは、Elixirに直接スクリプトの引数を与えてください。
+>
+>     $ bin/elixir bin/mix new kv --module KV
+>
+> 注意: -Sオプションを指定することで、直接スクリプトを実行することができます。
+>
+>     $ bin/elixir -S mix new kv --module KV
+>
+> -Sオプションを使うと、ElixirはPATHとスクリプトを探し出し、どこでも実行できるようにしてくれます。
 
 > Note: Mix is an Elixir executable. This means that in order to run `mix`, you need to have elixir's executable in your PATH. If not, you can run it by passing the script as argument to elixir:
 >
@@ -77,7 +113,9 @@ Let's take a brief look at those generated files.
 >
 > When using -S, elixir finds the script wherever it is in your PATH and executes it.
 
-## 1.2 Project compilation
+## 1.2 プロジェクトのコンパイル - Project compilation
+
+`mix.exs`というファイルは新しいプロジェクトを生成した時に作成され、主な用途はプロジェクトの設定です。さっそく見てみましょう(コメント行は削除しています)。
 
 A file named `mix.exs` was generated inside our new project and its main responsibility is to configure our project. Let's take a look at it (comments removed):
 
@@ -101,9 +139,15 @@ defmodule KV.Mixfile do
 end
 ```
 
+`mix.exs`の定義はプロジェクト名やバージョンといったプロジェクトの設定を返すための`project`と、アプリケーションによってそのまま生成された`application`によるふたつの公開関数です。
+
 Our `mix.exs` defines two public functions: `project`, which returns project configuration like the project name and version, and `application`, which is used to generate an application file.
 
+どちらも`deps`という非公開の関数を含んでいて、`project`が要求されると依存関係を定義します。本来は`deps`を別々のものとして定義する必要はありませんが、プロジェクトの設定を小さくするのに役立っています。
+
 There is also a private function named `deps`, which is invoked from the `project` function, that defines our project dependencies. Defining `deps` as a separate function is not required, but it helps keep the project configuration tidy.
+
+Mixは単純なモジュールの定義を含んだ`lib/kv.ex`というファイルを生成します。
 
 Mix also generates a file at `lib/kv.ex` with a simple module definition:
 
@@ -112,22 +156,32 @@ defmodule KV do
 end
 ```
 
+プロジェクトをそのままコンパイルするのに十分です。
+
 This structure is enough to compile our project:
 
     $ mix compile
+
+これらは、
 
 Will generate:
 
     Compiled lib/kv.ex
     Generated kv.app
 
+`lib/kv.ex`というファイルが`kv.app`というファイルをコンパイルしました。この`.app`というファイルは`application/0`という情報が定義された`mix.exs`から生成されています。詳細な`mix.exs`の設定についての機能は後々触れます。
+
 Notice the `lib/kv.ex` file was compiled and `kv.app` file was generated. This `.app` file is generated with the information from the `application/0` function in the `mix.exs` file. We will further explore `mix.exs` configuration features in future chapters.
+
+一度プロジェクトがコンパイルされると、プロジェクト内で`iex`を実行させることができます。
 
 Once the project is compiled, you can start an `iex` session inside the project by running:
 
     $ iex -S mix
 
-## 1.3 Running tests
+## 1.3 テストの実行 - Running tests
+
+Mixはプロジェクトをテストするために必要なファイルを自動で用意します。Mixは通常`lib`ディレクトリのファイルごとにそれぞれ対応する、`test`というディレクトリの`<ファイル名>_test.exs`に沿って実行されます。この規則により、すでに`test/kv_test.exs`と`lib/kv.ex`というファイルが見つかるはずです。しかし、これらはまだうまく結びついていません。
 
 Mix also generated the appropriate structure for running our project tests. Mix projects usually follow the convention of having a `<filename>_test.exs` file in the `test` directory for each file in the `lib` directory. For this reason, we can already find a `test/kv_test.exs` corresponding to our `lib/kv.ex` file. It doesn't do much at this point:
 
@@ -141,17 +195,27 @@ defmodule KVTest do
 end
 ```
 
+重要なポイントがふたつあります。
+
 It is important to note a couple things:
+
+1. テストが書かれたファイルはElixirのファイル(`.exs`)なので、テストを実行するたびにファイルをコンパイルする必要がありません。
 
 1. the test file is an Elixir script file (`.exs`). This is convenient because we don't need to compile test files before running them;
 
+2. [`ExUnit.Case`](/docs/stable/ex_unit/ExUnit.Case.html)をテストのAPIに組み込んだり、`test/2`という単純なマクロを定義するために`KVTest`と呼ばれるテストモジュールを定義しました。
+
 2. we define a test module named `KVTest`, use [`ExUnit.Case`](/docs/stable/ex_unit/ExUnit.Case.html) to inject the testing API and define a simple test using the `test/2` macro;
+
+Mixは`test/test_helper.exs`という素早くテストフレームワークのセットアップさせるファイルも生成しています。
 
 Mix also generated a file named `test/test_helper.exs` which is responsible for setting up the test framework:
 
 ```elixir
 ExUnit.start
 ```
+
+このファイルは毎回テストを実行するごとに自動的にMixに呼び出されます。テストの実行は`mix test`です。
 
 This file will be automatically required by Mix every time before we run our tests. We can run tests with `mix test`:
 
@@ -164,15 +228,23 @@ This file will be automatically required by Mix every time before we run our tes
 
     Randomized with seed 540224
 
+`mix test`を実行すると、Mixはソースファイルをコンパイルして、アプリケーションを生成し直してくれます。これはMixが次の章で説明する複数の環境を使い分けているからです。
+
 Notice that by running `mix test`, Mix has compiled the source files and generated the application file once again. This happens because Mix supports multiple environments, which we will explore in the next section.
 
+そのうえ、ExUnitはテストの結果を成功はピリオドで表示して、ランダムな値をシードに表示していることがわかります。目的にあわせてテストに失敗して、何が起こるか確かめましょう。
+
 Furthermore, you can see that ExUnit prints a dot for each successful test and automatically randomizes tests too. Let's make the test fail on purpose and see what happens.
+
+`test/kv_test.exs`のアサーションを書き換えてください。
 
 Change the assertion in `test/kv_test.exs` to the following:
 
 ```elixir
 assert 1 + 1 == 3
 ```
+
+`mix test`を再び実行します(二回目以降はコンパイルされません)
 
 Now run `mix test` again (notice this time there was no compilation):
 
@@ -188,25 +260,43 @@ Now run `mix test` again (notice this time there was no compilation):
     Finished in 0.05 seconds (0.05s on load, 0.00s on tests)
     1 tests, 1 failures
 
+アサーションの失敗ごとにExUnitは詳細な結果と、テストケースの名前と左手側(lfs)に失敗した値と右手側(rfs)に`==`オペレーターを表示しています。
+
 For each failure, ExUnit prints a detailed report, containing the test name with the test case, the code that failed and the values for the left-hand side (lhs) and right-hand side (rhs) of the `==` operator.
+
+2行目の失敗は、テストそのもののファイル名で、テストがどこに定義されているかを示しています。もし、2行目をそのままコピーして、`mix text`のあとにペーストすると、Mixは直接そのテストの箇所を部分的に実行します。
 
 In the second line of the failure, right below the test name, there is the location the test was defined. If you copy the test location in the second line, containing the file and line, and paste it in-front of `mix test`, Mix will load and run just that particular test:
 
     $ mix test test/kv_test.exs:4
 
+このショートカットはプロジェクトの開発を進めるにあたり、該当箇所のテストだけを実行しながら修正することができるのでとても便利です。
+
 This shortcut will be extremely useful as we build our project, allowing us to quickly iterate by running just a specific test.
+
+最後に、スタックトレースは与えられたテストの情報をもとに、ソースの失敗部分を部分的に実行し、失敗した原因を関連づけます。
 
 Finally, the stacktrace relates to the failure itself, giving information about the test and often the place the failure was generated from within the source files.
 
-## 1.4 Environments
+## 1.4 環境 - Environments
+
+Mixには"環境"という概念があります。これは開発者が特定の状況に応じた拡張を可能にします。標準では、Mixは3つの環境が存在しています。
 
 Mix supports the concept of "environments". They allow a developer to customize compilation and other options for specific scenarios. By default, Mix understands three environments:
+
+* `:dev` - Mixが標準で実行するタスク(例: `compile`)
+* `:test` - `mix test`で使われる
+* `:prod` - プロダクションに一度だけ実行される
 
 * `:dev` - the one in which mix tasks (like `compile`) run by default
 * `:test` - used by `mix test`
 * `:prod` - the one you will use to put your project in production
 
+> 注意: プロジェクトにそれぞれの環境に対して依存するライブラリを加える場合、これらは自動で引き継がれることはありません。ただし、`:prod`は環境の設定を引き継ぎます。
+
 > Note: If you add dependencies to your project, they will not inherit your project's environment, but instead run with their `:prod` environment settings!
+
+標準で、これらの3つの環境はすべて同じ設定で動作します。環境ごとの個別設定を行う必要がある場合は[`Mix.env`の機能](/docs/stable/mix/Mix.html#env/1)を参考に、`mix.exs`がそれぞれの環境をatomで返します。
 
 By default, these environments behave the same and all configuration we have seen so far will affect all three environments. Customization per environment can be done by accessing [the `Mix.env` function](/docs/stable/mix/Mix.html#env/1) in your `mix.exs` file, which returns the current environment as an atom:
 
@@ -219,11 +309,15 @@ defp deps_path(:prod), do: "prod_deps"
 defp deps_path(_), do: "deps"
 ```
 
+Mixは標準で`:dev`、テストのタスクを実行するための`:test`を使用します。環境は`MIX_ENV`の環境変数をもとに変更できます。
+
 Mix will default to the `:dev` environment, except for the `test` task that will default to the `:test` environment. The environment can be changed via the `MIX_ENV` environment variable:
 
     $ MIX_ENV=prod mix compile
 
-## 1.5 Exploring
+## 1.5 詳細 - Exploring
+
+プロジェクトの開発に詳細なMixの情報が必要であれば、いつでもヘルプタスクを開いて、実行可能なすべてのタスクのリストを取得することができます。
 
 There is much more to Mix, and we will continue to explore it as we build our project. A [general overview is available on the Mix documentation](http://elixir-lang.org/docs/stable/mix).
 
@@ -231,6 +325,10 @@ Keep in mind that you can always invoke the help task to list all available task
 
     $ mix help
 
+そして、タスクごとの詳細な内容を知るには`mix help タスク名`を実行します。
+
 You can get further information about a particular task by invoking `mix help TASK`.
+
+さあ、コードを書きましょう！
 
 Let's write some code!
