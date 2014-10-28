@@ -1,6 +1,6 @@
 ---
 layout: getting_started
-title: 1 Introduction
+title: 1 Introduction - はじめに
 guide: 1
 ---
 
@@ -8,26 +8,47 @@ guide: 1
 
   <div class="toc"></div>
 
+ようこそ！
+
 Welcome!
 
+このチュートリアルであなたが Elixir を始められるようにしようと思います．この章では Elixir がインストールされていることの確認と，IEx と呼ばれる Elixir のインタラクティブシェルをうまく動かせることに焦点を当てています．
+
 In this tutorial we are going to get you started with Elixir. This chapter will focus on ensuring Elixir is installed and that you can sucessfully run Elixir's Interactive Shell, called IEx.
+
+必要なのは:
+
+  * Erlang - Version 17.0 以降
+  * Elixir - Version 1.0.0 以降
+
+です．
 
 Our requirements are:
 
   * Erlang - Version 17.0 onwards
   * Elixir - Version 1.0.0 onwards
 
+それでは進めていきましょう！
+
 Let's get started!
+
+> もしこのチュートリアルやウェブサイトでエラーを見つけたら，[イシュートラッカーへバグを報告するか，プルリクエストを送ってください](https://github.com/elixir-lang/elixir-lang.github.com)．もし言語のバグではないかと思うのでしたら，[言語のイシュートラッカーへお知らせください](https://github.com/elixir-lang/elixir/issues)
 
 > If you find any errors in the tutorial or on the website, [please report a bug or send a pull request to our issue tracker](https://github.com/elixir-lang/elixir-lang.github.com). If you suspect it is a language bug, [please let us know in the language issue tracker](https://github.com/elixir-lang/elixir/issues).
 
-## 1.1 Installation
+## 1.1 Installation - インストール
+
+もしまだ Elixir をインストールしていなければ，[インストール](/install.html)を実行してください．もしやったことがあれば，`elixir -v` とすると現在の Elixir のバージョンを知ることができます．
 
 If you still haven't installed Elixir, run to our [installation page](/install.html). Once you are done, you can run `elixir -v` to get the current Elixir version.
 
-## 1.2 Interactive mode
+## 1.2 Interactive mode - インタラクティブモード
+
+Elixir をインストールすると，`iex`，`elixir` そして `elixirc` の 3 つが実行できるようになります．もし Elixir をソースからコンパイルしたか，パッケージ版を使っているならば，それらのファイルを `bin` ディレクトリの中で見つけられます．
 
 When you install Elixir, you will have three new executables: `iex`, `elixir` and `elixirc`. If you compiled Elixir from source or are using a packaged version, you can find these inside the `bin` directory.
+
+それでは，`iex` (windows をお使いなら `iex.bat` です ) を起動してみましょう．iex は Intractive Elixir という意味です．インタラクティブモードでは，どんな Elixir の式でも打つことができ，その結果を得ることができます．いくつか基本的な式で準備運動してみましょう:
 
 For now, let's start by running `iex` (or `iex.bat` if you are on Windows) which stands for Interactive Elixir. In interactive mode, we can type any Elixir expression and get its result. Let's warm up with some basic expressions:
 
@@ -40,9 +61,13 @@ iex> "hello" <> " world"
 "hello world"
 ```
 
+やっていけそうですね！次の章では言語構造や基本的な型にもっと慣れるためにインタラクティブシェルをたくさん使います．
+
 It seems we are ready to go! We will use the interactive shell quite a lot in the next chapters to get a bit more familiar with the language constructs and basic types, starting in the next chapter.
 
-## 1.3 Running scripts
+## 1.3 Running scripts - スクリプトを動かす
+
+言語の基本に慣れたあと，たぶんシンプルなプログラムを書いてみたくなるでしょう．ファイルに Elixir のコードを書いて `elixir` で実行することができます:
 
 After getting familiar with the basics of the language you may want to try writing simple programs. This can be accomplished by putting Elixir code into a file and executing it with `elixir`:
 
@@ -55,5 +80,7 @@ $ elixir simple.exs
 Hello world
 from Elixir
 ```
+
+後ほど，どうやって Elixir のコードをコンパイルするか ([8 章](/getting_started/8.html)にて) そしてどうやって Mix ビルドツールを使うか ([Mix & OTP ガイド](/getting_started/mix_otp/1.html)にて) を学びます．今は[2 章](/getting_started/2.html)へ進みましょう．
 
 Later on we will learn how to compile Elixir code (in [Chapter 8](/getting_started/8.html)) and how to use the Mix build tool (in the [Mix & OTP guide](/getting_started/mix_otp/1.html)). For now, let's move on to [Chapter 2](/getting_started/2.html).
