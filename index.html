@@ -9,50 +9,62 @@ layout: default
 
     <div class="entry-summary">
       <p>Elixir is a dynamic, functional language designed for building scalable and maintainable applications.</p>
+      <p>Elixir はスケールしやすくメンテナンスしやすいアプリケーションを作るための動的な関数型言語です。</p>
 
       <p>Elixir leverages the Erlang VM, known for running low-latency, distributed and fault-tolerant systems, while also being successfully used in web development and the embedded software domain.</p>
+      <p>Elixir は Erlang VM を活用しています．Erlang VM は低レイテンシで，分散型かつ耐障害性のあるシステムとして知られており，Web 開発や組み込みソフトウェアの領域で使われて成功しています。</p>
 
       <p>To learn more about Elixir, check our <a href="/getting_started/1.html">getting started guide</a>. Or keep reading to get an overview of the platform, language and tools.</p>
+      <p>もっと Elixir のことを知るには， <a href="/getting_started/1.html">getting started guide</a>を参照してください。このまま読み進めるとプラットフォームや言語，ツールについての概要を把握できます。</p>
+
     </div>
   </div>
 
   <div class="hentry post">
-    <h3>Platform features</h3>
+    <h3>Platform features - プラットフォームの特徴</h3>
   </div>
 
   <div class="hentry post">
-    <h4>Scalability</h4>
+    <h4>Scalability - スケールのしやすさ</h4>
     <div class="entry-summary">
 
       <p>All Elixir code runs inside lightweight threads of execution (called processes) that are isolated and exchange information via messages:</p>
+      <p>全ての Elixir コードは実行のための軽量スレッド(プロセスと呼ばれています)の中で動きます．軽量スレッドはお互いに分離させられており，メッセージ経由で情報をやりとりします:</p>
 
 {% highlight elixir %}
 parent = self()
 
 # Spawns an Elixir process (not an operating system one!)
+# Elixir のプロセス(OSのプロセスではない)を生み出す
 spawn_link(fn ->
   send parent, {:msg, "hello world"}
 end)
 
 # Block until the message is received
+# メッセージを受け取るまでブロックする
 receive do
   {:msg, contents} -> IO.puts contents
 end
 {% endhighlight %}
 
       <p>Due do their lightweight nature, it is not uncommon to have hundreds of thousands of processes running <i>concurrently</i> in the same machine. Isolation allows processes to be garbage collected independently, reducing system-wide pauses, and using all machine resources as efficiently as possible (vertical scaling).</p>
+      <p>軽量な性質により，同じマシン内で数十万のプロセスが同時に動作することも珍しくありません。プロセスは分離しているので，それぞれ独立して GC を受けることができ，システム全体での停止を減らせ，全てのマシンリソースを可能な限り効率的に利用(垂直スケーリング)できます。</p>
 
       <p>Processes are also able to communicate with other processes running on different machines in the same network. This provides the foundation for distribution, allowing developers to coordinate work across multiple nodes (horizontal scaling).</p>
+      <p>プロセスは同じネットワーク内での異なるマシン上にある別のプロセスとやりとりできます。これは分散の基盤として提供され，開発者は複数のノードに跨がる作業をうまく調整して動かせる(水平スケーリング)ようになります。</p>
+
     </div>
   </div>
 
   <div class="hentry post">
-    <h4>Fault-tolerance</h4>
+    <h4>Fault-tolerance - 対障害性</h4>
 
     <div class="entry-summary">
       <p>The unavoidable truth about software running in production is that <i>things will go wrong</i>. Even more when we take network, file systems and other third-party resources into account.</p>
+      <p>プロダクション環境で予期しないことが起こるのは避けようのない現実です。ネットワーク，ファイルシステム，その他第三者のリソースを考えに含めると，さらに予期しないことは増えます。</p>
 
       <p>To cope with failures, Elixir provides supervisors which describe how to restart parts of your system when things go awry, going back to a known initial state that is guaranteed to work:</p>
+      <p>障害に対処するため，Elixir では，予定通りに物事がいかなくなったとき，システムの一部をどのように再起動するかを決められるスーパーバイザーというものを提供しています。そのため、動作が保証されていることが既にわかっている初期状態へと戻ります:</p>
 
 {% highlight elixir %}
 import Supervisor.Spec
@@ -68,14 +80,15 @@ Supervisor.start_link(children, strategy: :one_for_one)
   </div>
 
   <div class="hentry post">
-    <h3>Language features</h3>
+    <h3>Language features - 言語の特徴</h3>
   </div>
 
   <div class="hentry post">
-    <h4>Functional programming</h4>
+    <h4>Functional programming - 関数型プログラミング</h4>
 
     <div class="entry-summary">
       <p>Functional programming promotes a coding style that helps developers write code that is short, fast, and maintainable. For example, pattern matching allows developers to easily destructure data and access its contents:</p>
+      <p>関数型プログラミングは開発者がコードを短く，速く，メンテナンスしやすく書くための助けとなるようなコーディングスタイルを推奨します。例えば，パターンマッチングは開発者がデータ構造を解いて，中身へのアクセスを簡単にできるようにします:</p>
 
 {% highlight elixir %}
 %User{name: name, age: age} = User.get("John Doe")
@@ -83,27 +96,33 @@ name #=> "John Doe"
 {% endhighlight %}
 
       <p>When mixed with guards, pattern matching allows us to elegantly match and assert specific conditions for some code to execute:</p>
+      <p>パターンマッチングをガードと一緒に使うと，いくつかのコードを実行するための具体的な条件を簡潔に示すことができます:</p>
 
 {% highlight elixir %}
 def serve_drinks(%User{age: age}) when age >= 21 do
   # Code that serves drinks!
+  # お酒を注ぐコード！
 end
 
 serve_drinks User.get("John Doe")
 #=> Fails if the user is under 21
+#=> もし 21 以下なら失敗させる
 {% endhighlight %}
 
       <p>Elixir relies heavily on those features to ensure your software is working under the expected constraints. And when it is not, don't worry, supervisors got your back!</p>
+      <p>Elixir はあなたのソフトウェアが予想の範囲内で動作していることを確かめるため，これらの特徴に大きく頼っています．そして，想定外になったとき，ご心配なく，スーパーバイザーが引き戻してくれます！</p>
     </div>
   </div>
 
   <div class="hentry post">
-    <h4>Extensibility and DSLs</h4>
+    <h4>Extensibility and DSLs - 拡張のしやすさと DSL</h4>
 
     <div class="entry-summary">
       <p>Elixir has been designed to be extensible, letting developers naturally extend the language to particular domains, in order to increase their productivity.</p>
+      <p>Elixir は生産性の向上のため，開発者が特定の領域のために言語を自然に拡張できるよう，拡張しやすいように設計されています。</p>
 
       <p>As an example, let's write a simple test case using <a href="http://elixir-lang.org/docs/stable/ex_unit/">Elixir's test framework called ExUnit</a>:</p>
+      <p>例として，<a href="http://elixir-lang.org/docs/stable/ex_unit/">ExUnit と呼ばれる Elixir のテストフレームワーク</a>で単純なテストケースを書いてみましょう:</p>
 
 {% highlight elixir %}
 defmodule MathTest do
@@ -115,19 +134,19 @@ defmodule MathTest do
 end
 {% endhighlight %}
 
-      <p>The <code>async: true</code> option allows <code>test</code>s to run in parallel, using as many CPU cores as possible, while the <code>assert</code> functionality can introspect your code, providing great reports in case of failures. Those features are built using Elixir macros, making it possible to add new constructs as if they were part of the language itself.</p>
+      <p>オプション <code>async: true</code> で、できるだけ複数の CPU コアを使って <code>テスト</code>を並列で走らせるようになり， <code>assert</code> 機能であなたのコードを検証し，失敗した場合はわかりやすいレポートを提供します。これらの特徴は Elixir のマクロを使って構築されており，まるでもともと言語の一部であるかのように新しい構文を追加できるようになっています。</p>
     </div>
   </div>
 
   <div class="hentry post">
-    <h3>Tooling features</h3>
+    <h3>Tooling features - ツールの特徴</h3>
   </div>
 
   <div class="hentry post">
-    <h4>A growing ecosystem</h4>
+    <h4>A growing ecosystem - 成長するエコシステム</h4>
 
     <div class="entry-summary">
-      <p>Elixir ships with a great set of tools to ease development. <a href="http://elixir-lang.org/docs/stable/mix/">Mix is a build tool</a> that allows you to easily create projects, manage tasks, run tests and more:</p>
+      <p>Elixir は開発を簡単にするための素晴しいツールセットを一緒に同梱しています。 <a href="http://elixir-lang.org/docs/stable/mix/">Mix</a> は開発を簡単にするための素晴しいツールセットを一緒に同梱しています:</p>
 
 {% highlight text %}
 $ mix new my_app
@@ -139,15 +158,15 @@ Finished in 0.04 seconds (0.04s on load, 0.00s on tests)
 1 tests, 0 failures
 {% endhighlight %}
 
-      <p>Mix is also able to manage dependencies and integrates nicely with the <a href="http://hex.pm/">Hex package manager</a>, which provides dependency resolution and the ability to remotely fetch packages.</p>
+      <p>Mix は依存性も管理でき， <a href="http://hex.pm/">Hex パッケージマネージャー</a>とうまく統合されています．Hex では依存関係の解決やリモートにあるパッケージの取得を行えます。</p>
     </div>
   </div>
 
   <div class="hentry post">
-    <h4>Interactive development</h4>
+    <h4>Interactive development - 対話型開発</h4>
 
     <div class="entry-summary">
-      <p>Tools like <a href="http://elixir-lang.org/docs/stable/iex/">IEx (Elixir's interactive shell)</a> are able to leverage many aspects of the language and platform to provide auto-complete, debugging tools, code reloading, as well as nicely formatted documentation:</p>
+      <p><a href="http://elixir-lang.org/docs/stable/iex/">IEx (Elixirのインタラクティブシェル)</a> といったようなツールは言語を様々な観点でとらえるのに活用でき，フォーマットされたドキュメントと同じくらい良いものです。また，自動補完，デバッグツール，コード再読み込みなどをするためのプラットフォームとしても提供されています:</p>
 
 {% highlight text %}
 $ iex
@@ -160,10 +179,11 @@ iex> h IEx.pry             # Prints the documentation for IEx pry functionality
   </div>
 
   <div class="hentry post">
-    <h4>Erlang compatible</h4>
+    <h4>Erlang compatible - Erlangとの互換性</h4>
 
     <div class="entry-summary">
       <p>Elixir runs on the Erlang VM giving developers complete access to Erlang's ecosystem, used by companies like <a href="https://www.heroku.com">Heroku</a>, <a href="http://www.whatsapp.com">Whatsapp</a>, <a href="https://klarna.com">Klarna</a>, <a href="http://basho.com">Basho</a> and many more to build distributed, fault-tolerant applications. An Elixir programmer can invoke any Erlang function with no runtime cost:</p>
+      <p>Elixir は Erlang VM 上で動作し，Erlang のエコシステムへ制限なしにアクセスできます．Erlang は <a href="https://www.heroku.com">Heroku</a>, <a href="http://www.whatsapp.com">Whatsapp</a>, <a href="https://klarna.com">Klarna</a>, <a href="http://basho.com">Basho</a> などの会社で多くの分散，耐障害性の高いアプリケーションの構築に使われています。Elixir プログラマーは実行時コストなしにどんな Erlang の関数も呼び出すことができます。</p>
 
 {% highlight iex %}
 iex> :crypto.md5("Using crypto from Erlang OTP")
@@ -171,7 +191,8 @@ iex> :crypto.md5("Using crypto from Erlang OTP")
 {% endhighlight %}
 
       <p>To learn more about Elixir, check our <a href="/getting_started/1.html">getting started guide</a>. We also have <a href="/docs.html">online documentation available</a> and a <a href="/crash-course.html">Crash Course for Erlang developers</a>.</p>
+      <p>もっと Elixir のことを知るには、 <a href="/getting_started/1.html">getting started guide</a>を参照してください。 <a href="/docs.html">オンラインドキュメント</a> や <a href="/crash-course.html">Erlang 開発者のための短期集中口座</a>も用意しています。</p>
+
     </div>
   </div>
 </div>
-
